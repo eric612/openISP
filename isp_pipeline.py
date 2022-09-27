@@ -193,9 +193,9 @@ rawimg = rawimg.reshape([raw_h, raw_w])
 print(50*'-' + '\nLoading RAW Image Done......')
 #plt.imshow(rawimg, cmap='gray')
 #plt.show()
-
+rawimg_gpu = cp.asarray(rawimg)
 # dead pixel correction
-dpc = DPC(rawimg, dpc_thres, dpc_mode, dpc_clip)
+dpc = DPC(rawimg_gpu, dpc_thres, dpc_mode, dpc_clip)
 rawimg_dpc = dpc.execute()
 print(50*'-' + '\nDead Pixel Correction Done......')
 #plt.imshow(rawimg_dpc, cmap='gray')
@@ -203,8 +203,8 @@ print(50*'-' + '\nDead Pixel Correction Done......')
 
 # black level compensation
 parameter = [bl_r, bl_gr, bl_gb, bl_b, alpha, beta]
-rawimg_dpc_gpu = cp.asarray(rawimg_dpc)
-blc = BLC(rawimg_dpc_gpu, parameter, bayer_pattern, blc_clip)
+
+blc = BLC(rawimg_dpc, parameter, bayer_pattern, blc_clip)
 rawimg_blc = blc.execute()
 print(50*'-' + '\nBlack Level Compensation Done......')
 #rawimg_blc = rawimg_blc.get()
