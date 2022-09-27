@@ -6,7 +6,7 @@ class DPC:
 
     def __init__(self, img, thres, mode, clip):
         self.img = img
-        self.thres = thres
+        self.thres = int(thres)
         self.mode = mode
         self.clip = clip
 
@@ -25,15 +25,15 @@ class DPC:
         dpc_img = np.empty((raw_h, raw_w), np.uint16)
         for y in range(img_pad.shape[0] - 4):
             for x in range(img_pad.shape[1] - 4):
-                p0 = img_pad[y + 2, x + 2]
-                p1 = img_pad[y, x]
-                p2 = img_pad[y, x + 2]
-                p3 = img_pad[y, x + 4]
-                p4 = img_pad[y + 2, x]
-                p5 = img_pad[y + 2, x + 4]
-                p6 = img_pad[y + 4, x]
-                p7 = img_pad[y + 4, x + 2]
-                p8 = img_pad[y + 4, x + 4]
+                p0 = int(img_pad[y + 2, x + 2])
+                p1 = int(img_pad[y, x])
+                p2 = int(img_pad[y, x + 2])
+                p3 = int(img_pad[y, x + 4])
+                p4 = int(img_pad[y + 2, x])
+                p5 = int(img_pad[y + 2, x + 4])
+                p6 = int(img_pad[y + 4, x])
+                p7 = int(img_pad[y + 4, x + 2])
+                p8 = int(img_pad[y + 4, x + 4])
                 if (abs(p1 - p0) > self.thres) and (abs(p2 - p0) > self.thres) and (abs(p3 - p0) > self.thres) \
                         and (abs(p4 - p0) > self.thres) and (abs(p5 - p0) > self.thres) and (abs(p6 - p0) > self.thres) \
                         and (abs(p7 - p0) > self.thres) and (abs(p8 - p0) > self.thres):

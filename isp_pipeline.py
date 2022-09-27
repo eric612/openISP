@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 import numpy as np
+import cupy as cp
 import csv
 from model.dpc import DPC
 from model.blc import BLC
@@ -16,7 +17,7 @@ from model.fcs import FCS
 from model.bcc import BCC
 from model.hsc import HSC
 from model.nlm import NLM
-
+import cv2 
 raw_path = './raw/test.RAW'
 config_path = './config/config.csv'
 
@@ -187,6 +188,7 @@ with f:
             bcc_clip = int(value) if 'bcc_clip' in str(parameter) else bcc_clip
 
 rawimg = np.fromfile(raw_path, dtype='uint16', sep='')
+#rawimg = cp.fromfile(raw_path, dtype='uint16', sep='')
 rawimg = rawimg.reshape([raw_h, raw_w])
 print(50*'-' + '\nLoading RAW Image Done......')
 #plt.imshow(rawimg, cmap='gray')
@@ -201,10 +203,12 @@ print(50*'-' + '\nDead Pixel Correction Done......')
 
 # black level compensation
 parameter = [bl_r, bl_gr, bl_gb, bl_b, alpha, beta]
-blc = BLC(rawimg_dpc, parameter, bayer_pattern, blc_clip)
+rawimg_dpc_gpu = cp.asarray(rawimg_dpc)
+blc = BLC(rawimg_dpc_gpu, parameter, bayer_pattern, blc_clip)
 rawimg_blc = blc.execute()
 print(50*'-' + '\nBlack Level Compensation Done......')
-#plt.imshow(rawimg_blc, cmap='gray')
+#rawimg_blc = rawimg_blc.get()
+#plt.imshow(rawimg_blc.get(), cmap='gray')
 #plt.show()
 
 # lens shading correction
@@ -223,7 +227,7 @@ print(50*'-' + '\nAnti-aliasing Filtering Done......')
 # white balance gain control
 parameter = [r_gain, gr_gain, gb_gain, b_gain]
 awb = WBGC(rawimg_aaf, parameter, bayer_pattern, awb_clip)
-rawimg_awb = awb.execute()
+rawimg_awb = awb.execute().get()
 print(50*'-' + '\nWhite Balance Gain Done......')
 #plt.imshow(rawimg_awb, cmap='gray')
 #plt.show()
@@ -234,6 +238,7 @@ rawimg_cnf = cnf.execute()
 print(50*'-' + '\nChroma Noise Filtering Done......')
 #plt.imshow(rawimg_cnf/4, cmap='gray')
 #plt.show()
+#cv2.imwrite('output.png', rawimg_cnf/4)
 
 # color filter array interpolation
 cfa = CFA(rawimg_cnf, cfa_mode, bayer_pattern, cfa_clip)
@@ -241,14 +246,20 @@ rgbimg_cfa = cfa.execute()
 print(50*'-' + '\nDemosaicing Done......')
 #plt.imshow(rgbimg_cfa/4)
 #plt.show()
+#print(rgbimg_cfa)
+#cv2.imwrite('output.png', rgbimg_cfa/4)
 
 # color correction matrix
 ccm = CCM(rgbimg_cfa, ccm)
 rgbimg_ccm = ccm.execute()
 print(50*'-' + '\nColor Correction Done......')
-#plt.imshow(rgbimg_ccm)
+#plt.imshow(rgbimg_ccm/4)
 #plt.show()
-
+#cv2.imshow('cv', rgbimg_cfa/4)
+#cv2.waitKey(0)
+#cv2.destroyAllWindows()
+cv2.imwrite('output.png', rgbimg_cfa/4)
+'''
 # gamma correction
 # look up table
 bw = 10
@@ -263,15 +274,20 @@ lut = dict(zip(ind, val))
 gc = GC(rgbimg_ccm, lut, mode)
 rgbimg_gc = gc.execute()
 print(50*'-' + '\nGamma Correction Done......')
-#plt.imshow(rgbimg_gc)
-#plt.show()
+plt.imshow(rgbimg_gc)
+plt.show()
+#norm_image = cv2.normalize(rgbimg_gc, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+cv2.imwrite('output.png', rgbimg_gc*256)
+
 
 # color space conversion
 csc = CSC(rgbimg_ccm, csc)
 yuvimg_csc = csc.execute()
 print(50*'-' + '\nColor Space Conversion Done......')
-#plt.imshow(yuvimg_csc[:,:,0], cmap='gray')
+#plt.imshow(yuvimg_csc, cmap='gray')
 #plt.show()
+#bgr = cv2.cvtColor(yuvimg_csc, cv2.COLOR_YUV2BGR);
+#cv2.imwrite('output.png', bgr)
 
 # non-local means denoising
 nlm = NLM(yuvimg_csc[:,:,0], 1, 4, nlm_h, nlm_clip)
@@ -319,7 +335,10 @@ print(50*'-' + '\nBrightness/Contrast Adjustment Done......')
 #plt.show()
 
 yuvimg_out = np.empty((raw_h, raw_w, 3), dtype=np.uint8)
+
 yuvimg_out[:,:,0] = yuvimg_bcc
 yuvimg_out[:,:,1:3] = yuvimg_hsc
-#plt.imshow(yuvimg_out)
-#plt.show()
+plt.imshow(yuvimg_out)
+plt.show()
+cv2.imwrite('output.png', yuvimg_out)
+'''

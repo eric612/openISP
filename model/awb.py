@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import numpy as np
-
+import cupy as cp
 class WBGC:
     'Auto White Balance Gain Control'
 
@@ -11,7 +11,7 @@ class WBGC:
         self.clip = clip
 
     def clipping(self):
-        np.clip(self.img, 0, self.clip, out=self.img)
+        cp.clip(self.img, 0, self.clip, out=self.img)
         return self.img
 
     def execute(self):
@@ -21,7 +21,7 @@ class WBGC:
         b_gain = self.parameter[3]
         raw_h = self.img.shape[0]
         raw_w = self.img.shape[1]
-        awb_img = np.empty((raw_h, raw_w), np.int16)
+        awb_img = cp.empty((raw_h, raw_w), cp.int16)
         if self.bayer_pattern == 'rggb':
             r = self.img[::2, ::2] * r_gain
             b = self.img[1::2, 1::2] * b_gain
