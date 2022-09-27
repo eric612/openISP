@@ -187,15 +187,15 @@ with f:
             contrast = int(value) if 'contrast' in str(parameter) else contrast
             bcc_clip = int(value) if 'bcc_clip' in str(parameter) else bcc_clip
 
-rawimg = np.fromfile(raw_path, dtype='uint16', sep='')
-#rawimg = cp.fromfile(raw_path, dtype='uint16', sep='')
+#rawimg = np.fromfile(raw_path, dtype='uint16', sep='')
+rawimg = cp.fromfile(raw_path, dtype='uint16', sep='')
 rawimg = rawimg.reshape([raw_h, raw_w])
 print(50*'-' + '\nLoading RAW Image Done......')
 #plt.imshow(rawimg, cmap='gray')
 #plt.show()
-rawimg_gpu = cp.asarray(rawimg)
+#rawimg_gpu = cp.asarray(rawimg)
 # dead pixel correction
-dpc = DPC(rawimg_gpu, dpc_thres, dpc_mode, dpc_clip)
+dpc = DPC(rawimg, dpc_thres, dpc_mode, dpc_clip)
 rawimg_dpc = dpc.execute()
 print(50*'-' + '\nDead Pixel Correction Done......')
 #plt.imshow(rawimg_dpc, cmap='gray')
@@ -226,6 +226,7 @@ print(50*'-' + '\nAnti-aliasing Filtering Done......')
 
 # white balance gain control
 parameter = [r_gain, gr_gain, gb_gain, b_gain]
+#rawimg_gpu = cp.asarray(rawimg)
 awb = WBGC(rawimg_aaf, parameter, bayer_pattern, awb_clip)
 rawimg_awb = awb.execute().get()
 print(50*'-' + '\nWhite Balance Gain Done......')
@@ -241,7 +242,7 @@ print(50*'-' + '\nChroma Noise Filtering Done......')
 #cv2.imwrite('output.png', rawimg_cnf/4)
 
 # color filter array interpolation
-cfa = CFA(rawimg_cnf, cfa_mode, bayer_pattern, cfa_clip)
+cfa = CFA(rawimg_awb, cfa_mode, bayer_pattern, cfa_clip)
 rgbimg_cfa = cfa.execute()
 print(50*'-' + '\nDemosaicing Done......')
 #plt.imshow(rgbimg_cfa/4)

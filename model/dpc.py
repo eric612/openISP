@@ -36,9 +36,10 @@ class DPC:
         raw_w = self.img.shape[1]
         pad_h = 2
         pad_w = 2
+        #print(self.mode)
         if self.proc == 'gpu':
             dpc_img = cp.empty((raw_h, raw_w), np.uint16)
-            self.kernel((raw_w//30,raw_h//24), (30,24), (img_pad,dpc_img,raw_w,raw_h,pad_w,pad_h,self.thres) )
+            self.kernel((raw_w//30,raw_h//24), (30,24), (img_pad,dpc_img,raw_w,raw_h,pad_w,pad_h,int(self.thres)) )
         else :
             dpc_img = np.empty((raw_h, raw_w), np.uint16)
             for y in range(img_pad.shape[0] - 4):
